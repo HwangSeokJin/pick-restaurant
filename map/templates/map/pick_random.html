@@ -6,15 +6,8 @@
 </head>
 <body>
 <div id="map" style="width:100%;height:350px;"></div>
-<form method="post">
-    {% csrf_token %}
-    {{ form }}
-    <button type="submit">&nbsp;검색</button>
-</form>
-{% for keyword, address in keyword_list.items %}
-<div>
-    <a href="{% url 'map:position' address %}"> {{ keyword }} </a>
-</div>
+{% for name in restaurants %}
+<h5>{{ name }}</h5>
 {% endfor %}
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ app_key }}"></script>
 <script>
