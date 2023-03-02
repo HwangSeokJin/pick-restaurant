@@ -2,6 +2,7 @@ import my_settings
 import requests
 from django.shortcuts import render
 from .forms import KeywordForm
+from random import randrange
 
 
 def index(request):
@@ -22,10 +23,12 @@ def index(request):
 
 
 def pick_address(request, address):
+    current_position = get_coordinate(address)
+    nearby_restaurants = find_nearby_restaurants(current_position)
     context = {
         'app_key': my_settings.KAKAO_JS_KEY,
-        'current_position': address,
-        'restaurants': find_nearby_restaurant(address),
+        'current_position': current_position,
+        'random_restaurant': pick_random_restaurant(nearby_restaurants),
     }
     return render(
         request,
@@ -34,20 +37,34 @@ def pick_address(request, address):
     )
 
 
-def find_nearby_restaurant(current_position):
-    coordinate = get_coordinate(current_position)
+def find_nearby_restaurants(current_position):
     url = 'https://dapi.kakao.com/v2/local/search/category.json'
     params = {'category_group_code': 'FD6',
-              'x': coordinate['x'], 'y': coordinate['y'],
-              'radius': 100, 'page': 1}
+              'x': current_position['x'],
+              'y': current_position['y'],
+              'radius': 100,
+              'page': 1}
     headers = {'Authorization': f'KakaoAK {my_settings.KAKAO_REST_API_KEY}'}
     response = requests.get(url, headers=headers, params=params).json()
-    restaurants = [restaurant['place_name'] for restaurant in response['documents']]
+    restaurants = get_restaurants_info(response)
     while not response['meta']['is_end']:
         params['page'] += 1
         response = requests.get(url, headers=headers, params=params).json()
-        restaurants += [restaurant['place_name'] for restaurant in response['documents']]
+        restaurants += get_restaurants_info(response)
     return restaurants
+
+
+def get_restaurants_info(response):
+    restaurants = [{'place_name': restaurant['place_name'],
+                    'x': restaurant['x'],
+                    'y': restaurant['y']}
+                   for restaurant in response['documents']]
+    return restaurants
+
+
+def pick_random_restaurant(restaurants):
+    random_index = randrange(0, len(restaurants))
+    return restaurants[random_index]
 
 
 def get_coordinate(address):
