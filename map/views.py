@@ -25,10 +25,13 @@ def index(request):
 def pick_address(request, address):
     current_position = get_coordinate(address)
     nearby_restaurants = find_nearby_restaurants(current_position)
+    random_restaurant = pick_random_restaurant(nearby_restaurants)
     context = {
         'app_key': my_settings.KAKAO_JS_KEY,
         'current_position': current_position,
-        'random_restaurant': pick_random_restaurant(nearby_restaurants),
+        'restaurant_name': random_restaurant['place_name'],
+        'x': random_restaurant['x'],
+        'y': random_restaurant['y'],
     }
     return render(
         request,
